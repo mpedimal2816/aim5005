@@ -31,7 +31,7 @@ class MinMaxScaler:
         diff_max_min = self.maximum - self.minimum
         
         # corrected the order of operations 
-        return (x - self.minimum) / (self.maximum - self.minimum)
+        return (x - self.minimum) / (diff_max_min)
     
     
     def fit_transform(self, x:list) -> np.ndarray:
