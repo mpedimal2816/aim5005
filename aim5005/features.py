@@ -23,7 +23,7 @@ class MinMaxScaler:
         self.minimum=x.min(axis=0)
         self.maximum=x.max(axis=0)
         
-    def transform(self, x:np.ndarray) -> list:
+    def transform(self, x:np.ndarray) -> np.ndarray:
         """
         MinMax Scale the given vector
         """
@@ -31,10 +31,10 @@ class MinMaxScaler:
         diff_max_min = self.maximum - self.minimum
         
         # corrected the order of operations 
-        return (x - self.minimum) / (diff_max_min)
+        return (x - self.minimum) / (self.maximum - self.minimum)
     
     
-    def fit_transform(self, x:list) -> np.ndarray:
+    def fit_transform(self, x:np.ndarray) -> np.ndarray:
         x = self._check_is_array(x)
         self.fit(x)
         return self.transform(x)
