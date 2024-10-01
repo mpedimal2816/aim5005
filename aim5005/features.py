@@ -13,29 +13,24 @@ class MinMaxScaler:
         """
         if not isinstance(x, np.ndarray):
             x = np.array(x)
-            
-        assert isinstance(x, np.ndarray), "Expected the input to be a list"
         return x
         
     
     def fit(self, x:np.ndarray) -> None:   
         x = self._check_is_array(x)
-        self.minimum=x.min(axis=0)
-        self.maximum=x.max(axis=0)
+        self.minimum = x.min(axis=0)
+        self.maximum = x.max(axis=0)
         
-    def transform(self, x:np.ndarray) -> np.ndarray:
+    def transform(self, x: np.ndarray) -> np.ndarray:
         """
         MinMax Scale the given vector
         """
         x = self._check_is_array(x)
         diff_max_min = self.maximum - self.minimum
-        
-        # corrected the order of operations 
-        return (x - self.minimum) / (self.maximum - self.minimum)
+        return (x - self.minimum) / diff_max_min
+
     
-    
-    def fit_transform(self, x:np.ndarray) -> np.ndarray:
-        x = self._check_is_array(x)
+    def fit_transform(self, x: np.ndarray) -> np.ndarray:
         self.fit(x)
         return self.transform(x)
     
@@ -45,47 +40,42 @@ class StandardScaler:
         self.mean = None
         self.std = None
 
-    def _check_is_array(self,x: np.ndarray) -> np.ndarray:
+    def fit(self, X: np.ndarray) -> 'StandardScaler':
         """
-        Try to convert x to a np.ndarray if it's not a np.ndarray and return. If it can't be cast, raise an error.
+        Compute the mean and standard deviation of each feature.
         """
-        if not isinstance(x,np.ndarray):
-            x = np.array(x)
-        assert isinstance(x, np.ndarray), "Expected the input to be a numpy array"
-        return x
+        self.mean = np.mean(X, axis=0)
+        self.std = np.std(X, axis=0)
+        return self
 
-    def fit(self,x: np.ndarray) -> None:
-        x=self._check_is_array(x)
-        self.mean = np.mean(x, axis=0)
-        self.std = np.std(x, axis =0)
+    def transform(self, X):
+        if self.mean is None or self.std is None:
+           raise RuntimeError("This StandardScaler instance is not fitted yet.")
+        # Avoid division by zero by replacing zero std with 1 (or handle as needed)
+        std_adj = np.where(self.std == 0, 1, self.std)
+        return (X - self.mean)/std_adj 
 
-    def tranform(self, x: np.ndarray) -> np.ndarray:
+
+    def fit_transform(self, X: np.ndarray) -> np.ndarray:
         """
-        Standardize the given vector
+        Fit to data, then transform it.
         """
-        x.self._check_is_array(x)
-        return (x - self.mean) / self.std
+        self.fit(X)
+        return self.transform(X)
+ 
+    
+class LabelEncoder:
+    def __init__(self):
+        self.classes_ = None
 
-    def fit_transform(self, x: np.ndarray) -> np.ndarray:
-        x = self._check_is_array(x)
-        self.fit(x)
-        return self.transform(x)
+    def fit(self, y):
+        self.classes_ = np.unique(y)
+        return self
 
+    def transform(self, y):
+        if self.classes_ is None:
+            raise ValueError("This LabelEncoder instance is not fitted yet.")
+        return np.array([np.argwhere(self.classes_ == label).flatten()[0] for label in y])
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
+    def fit_transform(self, y):
+        return self.fit(y).transform(y)
