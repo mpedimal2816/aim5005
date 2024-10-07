@@ -51,8 +51,9 @@ class TestFeatures(TestCase):
         data = [[0, 0], [0, 0], [1, 1], [1, 1]]
         expected = np.array([[-1., -1.], [-1., -1.], [1., 1.], [1., 1.]])
         scaler.fit(data)
+        result = scaler.transform(data)  # Added this line to define result
         assert (result == expected).all(), "Scaler transform does not return expected values. Expect {}. Got: {}".format(expected.reshape(1,-1), result.reshape(1,-1))
-        
+
     def test_standard_scaler_single_value(self):
         data = [[0, 0], [0, 0], [1, 1], [1, 1]]
         expected = np.array([[3., 3.]])
@@ -61,7 +62,46 @@ class TestFeatures(TestCase):
         result = scaler.transform([[2., 2.]]) 
         assert (result == expected).all(), "Scaler transform does not return expected values. Expect {}. Got: {}".format(expected.reshape(1,-1), result.reshape(1,-1))
 
-    # TODO: Add a test of your own below this line
+    def test_min_max_scaler_zero_variance(self):
+        data = [[2, 2], [2, 2], [2, 2], [2, 2]]
+        expected = np.array([[0, 0], [0, 0], [0, 0], [0, 0]])  # All transformed values should be 0 because min == max
+        scaler = MinMaxScaler()
+        scaler.fit(data)
+        result = scaler.transform(data)
+        assert (result == expected).all(), "Scaler does not handle zero variance correctly. Expect {}. Got: {}".format(expected, result)
+
+
+    def test_standard_scaler_zero_variance(self):
+        scaler = StandardScaler()
+        data = np.array([[4, 0], [4, 0], [4, 0], [4, 0]])
+        scaler.fit(data)
+        expected = np.array([[0, 0], [0, 0], [0, 0], [0, 0]])  # Expect 0s since the mean should be subtracted and divided by the std (which is zero)
+        result = scaler.transform(data)
+        assert (result[:, 1] == expected[:, 1]).all(), "Scaler does not handle zero variance correctly. Expect {}. Got: {}".format(expected[:, 1], result[:, 1])
+        
     
+    class TestLabelEncoder:
+        def test_fit(self):
+            le = LabelEncoder()
+            le.fit(["pencil", "pencil", "tin", "article"])
+            assert np.array_equal(le.classes_, ["article", "pencil", "tin"])
+
+        def test_transform(self):
+            le = LabelEncoder()
+            le.fit(["pencil", "tin", "article"])
+            transformed = le.transform(["tin", "tin", "pencil"])
+            assert np.array_equal(transformed, [2, 2, 1])
+
+        def test_fit_transform(self):
+            le = LabelEncoder()
+            transformed = le.fit_transform(["pencil", "tin", "article", "tin"])
+            assert np.array_equal(transformed, [1, 2, 0, 2])
+
+        def test_transform_unseen(self):
+            le = LabelEncoder()
+            le.fit(["pencil", "tin"])
+            with pytest.raises(ValueError):
+                le.transform(["london"])
+
 if __name__ == '__main__':
     unittest.main()
